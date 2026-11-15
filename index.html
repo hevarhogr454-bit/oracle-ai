@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle - ئۆراکڵ | زیرەکی دەستکرد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Vazirmatn', sans-serif; }</style>
+</head>
+<body class="bg-gray-950 text-gray-100 h-screen flex flex-col justify-between">
+    <header class="bg-gray-900 border-b border-gray-800 p-4 flex items-center justify-between">
+        <h1 class="font-bold text-lg text-white">Oracle - ئۆراکڵ</h1>
+        <span class="text-xs text-emerald-400">● ئامادەیە</span>
+    </header>
+    <main id="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4 max-w-2xl w-full mx-auto">
+        <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl text-gray-200">
+            سڵاو! من ئۆراکڵم. چۆن دەتوانم یارمەتیت بدەم؟ ✨
+        </div>
+    </main>
+    <footer class="bg-gray-900 border-t border-gray-800 p-4">
+        <form id="chatForm" onsubmit="sendMessage(event)" class="max-w-2xl mx-auto flex gap-2">
+            <input type="text" id="userInput" placeholder="لێرە شتێک بنووسە..." class="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-gray-100 focus:outline-none" required>
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-medium">ناردن</button>
+        </form>
+    </footer>
+    <script>
+        const API_KEY = "AQ.Ab8RN6KP6H85qUcTGIFS-MI0_AHULvZdMMonhoZKUaRuWgcP_Q";
+        let history = [{ role: "user", parts: [{ text: "تۆ ئۆراکڵیت؛ بە کوردیی گەرموگوڕ قسە دەکە." }] }];
+        async function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
+            if (!text) return;
+            appendMsg(text, 'user');
+            input.value = '';
+            try {
+                history.push({ role: 'user', parts: [{ text: text }] });
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: history })
+                });
+                const data = await res.json();
+                const reply = data.candidates[0].content.parts[0].text;
+                history.push({ role: 'model', parts: [{ text: reply }] });
+                appendMsg(reply, 'model');
+            } catch (err) {
+                appendMsg("ببوورە، هەڵەیەک ڕوویدا.", 'model');
+            }
+        }
+        function appendMsg(text, sender) {
+            const chatBox = document.getElementById('chatBox');
+            const html = `<div class="p-4 rounded-2xl ${sender === 'user' ? 'bg-indigo-600/20 mr-auto' : 'bg-gray-900 ml-auto'} max-w-[80%] text-gray-200">${text}</div>`;
+            chatBox.insertAdjacentHTML('beforeend', html);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
